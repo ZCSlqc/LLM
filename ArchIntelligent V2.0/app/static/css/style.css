@@ -1,0 +1,152 @@
+body {
+    font-family: 'Inter', 'Microsoft YaHei', Arial, sans-serif;
+    background-color: #e9ecef;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.main-container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 600px;
+    margin: 30px auto 30px auto;
+    background: transparent;
+    min-height: 100vh;  /* 推荐用100vh，适配不同屏幕 */
+    box-sizing: border-box;
+
+}
+.bookmark-bar {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    display: flex;
+    align-items: flex-end;
+    background: transparent;
+    border: none;
+    z-index: 200;
+    height: 44px;
+}
+.bookmark-btn {
+    background: #f1f3f5;
+    border: 1.5px solid #e0e0e0;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    color: #888;
+    font-weight: 600;
+    padding: 8px 22px 12px 22px;
+    margin-right: 8px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    outline: none;
+    font-size: 15px;
+}
+.bookmark-btn.active, .bookmark-btn:active {
+    background: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+.bookmark-btn:hover {
+    background: #e3eaff;
+    color: #007bff;
+    border-color: #007bff;
+}
+
+
+
+.chat-container {
+    width: 100%;
+    max-width: 600px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    margin-top: 54px;
+    backdrop-filter: blur(80px);
+}
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    font-size: 16px;
+}
+.message {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+.message img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+.message-content {
+    padding: 12px 16px;
+    border-radius: 12px;
+    max-width: 85%;
+    font-size: 16px;
+    line-height: 1.6;
+}
+.message-content .title {
+    font-size: 1.3em;
+    font-weight: bold;
+    display: block;
+    margin: 16px 0 12px 0;
+    color: #333;
+}
+.message.user {
+    flex-direction: row-reverse;
+}
+.message.user img {
+    margin-left: 10px;
+    margin-right: 0;
+}
+.message.user .message-content {
+    background-color: #007bff;
+    backdrop-filter: blur(80px);
+    color: white;
+    text-align: right;
+}
+.message.bot .message-content {
+    background-color: #f1f3f5;
+}
+.input-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.input-container input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+.input-container button {
+    padding: 10px 15px;
+    min-width: 60px;
+    white-space: nowrap;
+    background-color: #007bff;
+    backdrop-filter: blur(80px);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.input-container button:hover {
+    background-color: #0056b3;
+    backdrop-filter: blur(80px);
+}

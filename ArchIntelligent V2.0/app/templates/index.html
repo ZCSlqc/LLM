@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>筑园商业咨询助手</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/bot-avatar.png') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+<body>
+<div class="main-container">
+    <div class="bookmark-bar">
+        <a href="{{ url_for('index') }}" class="bookmark-btn{% if request.endpoint=='index' %} active{% endif %}">聊天</a>
+        <a href="{{ url_for('RAG') }}" class="bookmark-btn{% if request.endpoint=='RAG' %} active{% endif %}">资料</a>
+        <button class="bookmark-btn" onclick="toggleTheme()">主题</button>
+    </div>
+    <div class="chat-container">
+        <div class="messages" id="messages"></div>
+        <div id="loading" class="loading" style="display: none;">加载中...</div>
+        <div class="input-container">
+            <input id="chat-input" type="text" placeholder="输入消息..." />
+            <button onclick="sendMessage()">发送</button>
+            <button onclick="clearChat()" style="background:#dc3545;">清空聊天</button>
+        </div>
+    </div>
+</div>
+</body>
+</html> 

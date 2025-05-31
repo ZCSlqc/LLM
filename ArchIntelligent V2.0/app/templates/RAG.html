@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>文档上传页面</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/bot-avatar.png') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        
+
+        #knowledge-status {
+            margin-top: auto;  /* 自动推到最底部 */
+        }
+
+        #drop-area {
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+            padding: 40px 20px;
+            background: #f8f9fa;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            margin-bottom: 10px;
+            position: relative;
+            height: 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #drop-area.dragover {
+            border-color: #0056b3;
+            background: #e3f2fd;
+            box-shadow: 0 0 0 4px #90caf9;
+        }
+
+        #drop-label {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0 10px;
+            box-sizing: border-box;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1; /* 确保label在最上层 */
+        }
+
+        #drop-label span {
+            font-size: 1.2rem;
+            color: #333;
+            user-select: none;
+        }
+
+        #file-list {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            /* 不要滚动条，不要高度限制 */
+            max-height: none;
+            overflow: visible;
+            padding: 0;
+            margin: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none; /* 允许点击穿透到下面的label */
+        }
+        #file-list div {
+            text-align: center;
+            font-size: 1rem;
+            color: #007bff;
+            margin-bottom: 8px;
+            word-break: break-all;
+            width: 100%;
+            padding: 0 20px;
+            pointer-events: auto; /* 文件名本身可以点击 */
+        }
+
+        #file-list .folder-group {
+            width: 100%;
+            margin-bottom: 15px;
+            background: transparent;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        #file-list .folder-name {
+            display: none;  /* 当folder为空时不显示folder-name */
+        }
+
+        #file-list .folder-group:has(.folder-name:not(:empty)) .folder-name {
+            display: block;
+            color: #1976d2;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(25, 118, 210, 0.3);
+        }
+
+        #file-list .file-name {
+            color: #007bff;
+            font-size: 0.95rem;
+            margin: 4px 0;
+            padding: 5px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        #file-list .file-name:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #uploaded-files {
+            background: #e3f2fd;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #90caf9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        #uploaded-files::before {
+            content: "已上传的文件：";
+            display: block;
+            color: #1976d2;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        #uploaded-files div {
+            font-size: 1rem;
+            color: #1976d2;
+            margin-bottom: 8px;
+            word-break: break-all;
+            padding: 8px 15px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        #uploaded-files div:hover {
+            background: rgba(255,255,255,0.9);
+            transform: translateX(5px);
+        }
+
+        #uploaded-files div:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <div class="bookmark-bar">
+        <a href="{{ url_for('index') }}" class="bookmark-btn{% if request.endpoint=='index' %} active{% endif %}">聊天</a>
+        <a href="{{ url_for('RAG') }}" class="bookmark-btn{% if request.endpoint=='RAG' %} active{% endif %}">资料</a>
+        <button class="bookmark-btn" onclick="toggleTheme()">主题</button>
+    </div>
+    <div class="chat-container">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <form id="upload-form" method="post" enctype="multipart/form-data">
+                <div id="drop-area">
+                    <label for="pdf" id="drop-label" style="width:100%;height:100%;">
+                        <span id="drop-text">
+                            将文件拖放到此处<br><b>-或-</b><br>点击上传
+                        </span>
+                        <input class="form-control" type="file" id="pdf" name="pdf" accept="application/pdf" multiple style="display:none;" required>
+                    </label>
+                    <div id="file-list"></div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">上传文件</button>
+            </form>
+            <form method="post" action="/clear" style="width:100%;">
+                <button type="submit" class="btn btn-danger w-100">清空知识库</button>
+            </form>
+            <!-- 新增：上传后显示文件名的容器 -->
+            <div id="uploaded-files"></div>
+        </div>
+        
+        
+        <!-- 显示上传结果 -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="alert alert-info" style="margin: 0 0 10px 0;">
+              {% for message in messages %}
+                <div>{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
+        <div class="card mb-3" id="knowledge-status">
+            <div class="card-header">知识库状态</div>
+            <div class="card-body">
+                <ul>
+                    <li>文档数量：<span id="doc-count">{{ status.document_count }}</span></li>
+                    <li>表名：<span id="table-name">{{ status.table_name }}</span></li>
+                    <li>嵌入模型：<span id="embedding-model">{{ status.embedding_model }}</span>（维度：<span id="embedding-dim">{{ status.embedding_dim }}</span>）</li>
+                    <li>LLM模型：<span id="llm-model">{{ status.llm_model }}</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+const dropArea = document.getElementById('drop-area');
+const fileInput = document.getElementById('pdf');
+const dropText = document.getElementById('drop-text');
+const fileList = document.getElementById('file-list');
+const uploadedFiles = document.getElementById('uploaded-files');
+
+let selectedFiles = [];
+
+// 页面加载时恢复已上传文件的显示
+window.addEventListener('load', loadUploadedFiles);
+
+// 拖拽高亮
+dropArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropArea.classList.add('dragover');
+});
+dropArea.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropArea.classList.remove('dragover');
+});
+dropArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropArea.classList.remove('dragover');
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type === "application/pdf");
+    if (files.length > 0) {
+        // 检查与已上传文件和已选择文件的重名情况
+        const existingNames = [
+            ...selectedFiles.map(f => f.name),
+            ...getUploadedFileNames()
+        ];
+        
+        files.forEach(f => {
+            if (!existingNames.includes(f.name)) {
+                selectedFiles.push(f);
+            }
+        });
+        updateFileInput();
+        showFileNames();
+    }
+});
+fileInput.addEventListener('change', () => {
+    const newFiles = Array.from(fileInput.files);
+    // 检查与已上传文件和已选择文件的重名情况
+    const existingNames = [
+        ...selectedFiles.map(f => f.name),
+        ...getUploadedFileNames()
+    ];
+    
+    newFiles.forEach(f => {
+        if (!existingNames.includes(f.name)) {
+            selectedFiles.push(f);
+        }
+    });
+    showFileNames();
+});
+
+function updateFileInput() {
+    const dt = new DataTransfer();
+    selectedFiles.forEach(f => dt.items.add(f));
+    fileInput.files = dt.files;
+}
+
+function showFileNames() {
+    fileList.innerHTML = '';
+    if (selectedFiles.length > 0) {
+        // 按文件夹分组
+        const filesByFolder = {};
+        selectedFiles.forEach(f => {
+            const path = f.webkitRelativePath || f.name;
+            const parts = path.split('/');
+            let folder = ''; // 默认为空
+            if (parts.length > 1) {
+                folder = parts[0];
+                if (!filesByFolder[folder]) {
+                    filesByFolder[folder] = [];
+                }
+                filesByFolder[folder].push(f.name);
+            } else {
+                // 直接添加到未分组文件列表
+                if (!filesByFolder[folder]) {
+                    filesByFolder[folder] = [];
+                }
+                filesByFolder[folder].push(f.name);
+            }
+        });
+
+        // 显示分组后的文件
+        Object.entries(filesByFolder).forEach(([folder, files]) => {
+            const folderDiv = document.createElement('div');
+            folderDiv.className = 'folder-group';
+            folderDiv.innerHTML = `<div class="folder-name">${folder}</div>`;
+            files.forEach(fileName => {
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'file-name';
+                fileDiv.textContent = fileName;
+                folderDiv.appendChild(fileDiv);
+            });
+            fileList.appendChild(folderDiv);
+        });
+        
+        fileList.style.display = 'flex';
+        dropText.style.display = 'none';
+    } else {
+        fileList.style.display = 'none';
+        dropText.style.display = '';
+    }
+}
+
+// 上传时，恢复提示文字，显示上传文件名
+document.getElementById('upload-form').addEventListener('submit', function(e) {
+    // 阻止默认提交
+    e.preventDefault();
+    
+    // 如果没有选择文件，直接返回
+    if (selectedFiles.length === 0) return;
+    
+    // 创建 FormData 对象
+    const formData = new FormData();
+    selectedFiles.forEach(file => {
+        formData.append('pdf', file);
+    });
+    
+    // 发送上传请求
+    fetch('/RAG', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        // 上传成功后更新界面
+        fileList.style.display = 'none';
+        dropText.style.display = '';
+        // 展示本次上传的文件名
+        showUploadedFiles(selectedFiles.map(f => f.name));
+        selectedFiles = [];
+        // 清空文件输入
+        fileInput.value = '';
+        // 刷新知识库状态
+        updateKnowledgeStatus();
+    }).catch(error => {
+        console.error('上传失败:', error);
+    });
+});
+
+// 获取已上传文件的名称列表
+function getUploadedFileNames() {
+    const divs = uploadedFiles.querySelectorAll('div');
+    return Array.from(divs).map(div => div.textContent);
+}
+
+// 从 localStorage 加载已上传文件
+function loadUploadedFiles() {
+    const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+    if (savedFiles.length > 0) {
+        showUploadedFiles(savedFiles);
+    }
+}
+
+// 保存已上传文件到 localStorage
+function saveUploadedFiles() {
+    const files = getUploadedFileNames();
+    localStorage.setItem('uploadedFiles', JSON.stringify(files));
+}
+
+function showUploadedFiles(names) {
+    if (names && names.length > 0) {
+        // 获取已上传的文件名
+        const existingNames = getUploadedFileNames();
+        
+        // 只添加不重复的文件名
+        names.forEach(name => {
+            if (!existingNames.includes(name)) {
+                const div = document.createElement('div');
+                div.textContent = name;
+                uploadedFiles.appendChild(div);
+            }
+        });
+        uploadedFiles.style.display = 'block';
+        // 保存到 localStorage
+        saveUploadedFiles();
+    }
+}
+
+// 添加清除知识库的处理
+document.querySelector('form[action="/clear"]').addEventListener('submit', function(e) {
+    // 清空已上传文件的显示和本地存储
+    uploadedFiles.innerHTML = '';
+    uploadedFiles.style.display = 'none';
+    localStorage.removeItem('uploadedFiles');
+});
+
+function updateKnowledgeStatus() {
+    fetch('/status')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('doc-count').textContent = data.document_count;
+            document.getElementById('table-name').textContent = data.table_name;
+            document.getElementById('embedding-model').textContent = data.embedding_model;
+            document.getElementById('embedding-dim').textContent = data.embedding_dim;
+            document.getElementById('llm-model').textContent = data.llm_model;
+        });
+}
+updateKnowledgeStatus();
+
+setInterval(updateKnowledgeStatus, 5000); // 每5秒自动刷新一次
+</script>
+</body>
+</html>

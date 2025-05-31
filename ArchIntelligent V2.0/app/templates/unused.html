@@ -1,0 +1,13 @@
+{% if citations %}
+        <div class="card mb-3">
+            <div class="card-header">引用来源</div>
+            <div class="card-body">
+                {% for cite in citations %}
+                    <div class="mb-2">
+                        <strong>文件：</strong>{{ cite.metadata.file_name if cite.metadata and cite.metadata.file_name else '未知文件' }}<br>
+                        <pre>{{ cite.content }}</pre>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
